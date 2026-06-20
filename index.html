@@ -13,9 +13,10 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh; /* Changed from height to min-height to allow scrolling if needed */
             margin: 0;
             user-select: none;
+            padding: 20px 0; /* Gives some breathing room at the top and bottom */
         }
 
         h1 { margin-bottom: 10px; font-weight: 300; letter-spacing: 1px; }
@@ -39,12 +40,13 @@
             justify-content: space-around;
             width: 95%;
             max-width: 1400px;
-            height: 450px;
+            height: 650px; /* Increased from 450px to perfectly fit the massive tower */
             background: #25252e;
             border-radius: 12px;
             padding: 20px;
             position: relative;
             box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            align-items: flex-end; /* Ensures everything sits flat on the base */
         }
 
         .peg-container {
@@ -57,13 +59,13 @@
             cursor: pointer;
         }
 
-        /* The Peg Pole (now styled like dark wood/metal) */
+        /* The Peg Pole */
         .peg-container::before {
             content: '';
             position: absolute;
             bottom: 0;
             width: 8px;
-            height: 400px;
+            height: 580px; /* Increased from 400px so poles stand taller than the discs */
             background: #3e3e4f;
             border-radius: 4px;
             z-index: 1;
@@ -79,7 +81,7 @@
 
         /* The Discs */
         .block {
-            height: 7px;
+            height: 9px; /* Increased from 7px to give them actual thickness */
             border-radius: 2px;
             margin-bottom: 1px;
             z-index: 2;
@@ -96,14 +98,14 @@
 </head>
 <body>
 
-    <h1> gustav0_0<h1>
+    <h1>gustav0_0</h1>
     
     <div class="counter-box">
         Moves: <span id="move-count">0</span>
     </div>
     
     <div class="board" id="game-board">
-        </div>
+    </div>
 
     <script>
         const TOTAL_DISCS = 52;
@@ -134,22 +136,22 @@
         }
 
         // Generate 52 Discs with Alternating Cream and Brown Colors
-for (let i = TOTAL_DISCS; i >= 1; i--) {
-    
-    // Math Check: If i divided by 2 has 0 remainder, it's even!
-    let isEven = (i % 2 === 0);
-    
-    // Pick color based on even or odd
-    let discColor = isEven ? "#f5f0ea" : "#3e2723"; // Cream vs Dark Brown
-    
-    // Calculate width scales smoothly between 20px and 120px
-    let width = 20 + (i * (100 / TOTAL_DISCS)); 
+        for (let i = TOTAL_DISCS; i >= 1; i--) {
+            
+            // Math Check: If i divided by 2 has 0 remainder, it's even!
+            let isEven = (i % 2 === 0);
+            
+            // Pick color based on even or odd
+            let discColor = isEven ? "#f5f0ea" : "#3e2723"; // Cream vs Dark Brown
+            
+            // Calculate width scales smoothly between 20px and 120px
+            let width = 20 + (i * (100 / TOTAL_DISCS)); 
 
-    pegs['A'].push({
-        id: i,
-        style: `width: ${width}px; background-color: ${discColor};`
-    });
-}
+            pegs['A'].push({
+                id: i,
+                style: `width: ${width}px; background-color: ${discColor};`
+            });
+        }
 
         // Build HTML Peg Structures
         const boardElement = document.getElementById('game-board');
