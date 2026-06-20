@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aesthetic 52-Disc Stacking Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1e1e24;
+            color: #f5f0ea; /* Soft cream text */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            user-select: none;
+        }
+
+        h1 { margin-bottom: 10px; font-weight: 300; letter-spacing: 1px; }
+
+        /* The Move Counter Box */
+        .counter-box {
+            background-color: #2a2a35;
+            border: 1px solid #4a4a5a;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #e6dfd5;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        /* The Board holding the pegs */
+        .board {
+            display: flex;
+            justify-content: space-around;
+            width: 95%;
+            max-width: 1400px;
+            height: 450px;
+            background: #25252e;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+
+        .peg-container {
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            width: 9%;
+            height: 100%;
+            position: relative;
+            cursor: pointer;
+        }
+
+        /* The Peg Pole (now styled like dark wood/metal) */
+        .peg-container::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            width: 8px;
+            height: 400px;
+            background: #3e3e4f;
+            border-radius: 4px;
+            z-index: 1;
+        }
+
+        /* The Peg Label (A, B, C...) */
+        .peg-label {
+            position: absolute;
+            bottom: -25px;
+            font-weight: bold;
+            color: #6a6a7a;
+        }
+
+        /* The Discs */
+        .block {
+            height: 7px;
+            border-radius: 2px;
+            margin-bottom: 1px;
+            z-index: 2;
+            cursor: grab;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        /* Clean white highlight glow when selected */
+        .selected {
+            transform: translateY(-15px);
+            box-shadow: 0 0 12px #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Aesthetic 52-Disc Stacking Game</h1>
+    
+    <div class="counter-box">
+        Moves: <span id="move-count">0</span>
+    </div>
+    
+    <div class="board" id="game-board">
+        </div>
+
+    <script>
+        const TOTAL_DISCS = 52;
+        const PEGS_LIST = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+        
+        let pegs = {};
+        let moveCount = 0;
+        let selectedPeg = null;
+
+        // Initialize Pegs
+        PEGS_LIST.forEach(peg => { pegs[peg] = []; });
+
+        // Helper function to blend two hex colors together smoothly
+        function blendColors(color1, color2, percentage) {
+            const r1 = parseInt(color1.substring(1, 3), 16);
+            const g1 = parseInt(color1.substring(3, 5), 16);
+            const b1 = parseInt(color1.substring(5, 7), 16);
+
+            const r2 = parseInt(color2.substring(1, 3), 16);
+            const g2 = parseInt(color2.substring(3, 5), 16);
+            const b2 = parseInt(color2.substring(5, 7), 16);
+
+            const r = Math.round(r1 + (r2 - r1) * percentage);
+            const g = Math.round(g1 + (g2 - g1) * percentage);
+            const b = Math.round(b1 + (b2 - b1) * percentage);
+
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        // Generate 52 Discs with Alternating Cream and Brown Colors
+for (let i = TOTAL_DISCS; i >= 1; i--) {
+    
+    // Math Check: If i divided by 2 has 0 remainder, it's even!
+    let isEven = (i % 2 === 0);
+    
+    // Pick color based on even or odd
+    let discColor = isEven ? "#f5f0ea" : "#3e2723"; // Cream vs Dark Brown
+    
+    // Calculate width scales smoothly between 20px and 120px
+    let width = 20 + (i * (100 / TOTAL_DISCS)); 
+
+    pegs['A'].push({
+        id: i,
+        style: `width: ${width}px; background-color: ${discColor};`
+    });
+}
+
+        // Build HTML Peg Structures
+        const boardElement = document.getElementById('game-board');
+        PEGS_LIST.forEach(pegId => {
+            const pegDiv = document.createElement('div');
+            pegDiv.className = 'peg-container';
+            pegDiv.id = pegId;
+
+            const label = document.createElement('div');
+            label.className = 'peg-label';
+            label.innerText = pegId;
+            pegDiv.appendChild(label);
+
+            boardElement.appendChild(pegDiv);
+        });
+
+        // Draw current layout view
+        function renderBoard() {
+            document.getElementById('move-count').innerText = moveCount;
+
+            PEGS_LIST.forEach(pegId => {
+                const pegElement = document.getElementById(pegId);
+                
+                const discs = pegElement.querySelectorAll('.block');
+                discs.forEach(d => d.remove());
+                
+                pegs[pegId].forEach(blockObj => {
+                    const blockDiv = document.createElement('div');
+                    blockDiv.className = 'block';
+                    blockDiv.style.cssText = blockObj.style;
+                    pegElement.appendChild(blockDiv);
+                });
+            });
+        }
+
+        // Click Handler Game Loop
+        document.querySelectorAll('.peg-container').forEach(peg => {
+            peg.addEventListener('click', () => {
+                const clickedPegId = peg.id;
+
+                if (selectedPeg === null) {
+                    if (pegs[clickedPegId].length > 0) {
+                        selectedPeg = clickedPegId;
+                        const topBlockVis = peg.querySelector('.block:last-of-type');
+                        if (topBlockVis) topBlockVis.classList.add('selected');
+                    }
+                } else {
+                    const fromPeg = pegs[selectedPeg];
+                    const toPeg = pegs[clickedPegId];
+                    
+                    if (selectedPeg === clickedPegId) {
+                        renderBoard();
+                        selectedPeg = null;
+                        return;
+                    }
+
+                    const movingBlock = fromPeg[fromPeg.length - 1];
+                    const targetTopBlock = toPeg[toPeg.length - 1];
+
+                    if (!targetTopBlock || movingBlock.id < targetTopBlock.id) {
+                        toPeg.push(fromPeg.pop());
+                        moveCount++;
+                        renderBoard();
+                        
+                        if (pegs['J'].length === TOTAL_DISCS) {
+                            setTimeout(() => alert(`🎉 Incredible! You organized all 52 cream and brown discs in ${moveCount} moves!`), 100);
+                        }
+                    } else {
+                        alert("❌ Illegal Move! Bigger discs can't sit on top of smaller discs.");
+                        renderBoard();
+                    }
+                    selectedPeg = null;
+                }
+            });
+        });
+
+        renderBoard();
+    </script>
+</body>
+</html>
